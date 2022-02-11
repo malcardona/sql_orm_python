@@ -16,6 +16,8 @@ __email__ = "alumnos@inove.com.ar"
 __version__ = "1.1"
 
 import sqlite3
+import csv
+import os.path
 
 import sqlalchemy
 from sqlalchemy import Column, Integer, String, ForeignKey
@@ -59,29 +61,51 @@ def create_schema():
     base.metadata.create_all(engine)
 
 
+def insert_tutor(name):
+    # Crear la session
+    Session = sessionmaker(bind=engine)
+    t_data = Session()
+
+    # Crear un nuevo tutor
+    tutor = Tutor(name=name)
+
+    # Agregar El nuevo tutor a la DB
+    t_data.add(tutor)
+    t_data.commit()
+    print(tutor)
+
+def insert_est(name, age, grade, tutor_id):
+    # Crear la session
+    Session = sessionmaker(bind=engine)
+    in_data = Session()
+
+    # Buscar el tutor
+    query = in_data.query(Tutor).filter(Tutor.id == tutor_id)
+    id_T = query.first()
+
+    # Crear la persona
+    estudiante = Estudiante(name=name, age=age, grade=grade)
+    estudiante.tutor = id_T
+
+    # Agregar la persona a la DB
+    in_data.add(estudiante)
+    in_data.commit()
+    print(estudiante)
+
 def fill():
-    print('Completemos esta tablita!')
     # Llenar la tabla de la secundaria con al menos 2 tutores
     # Cada tutor tiene los campos:
     # id --> este campo es auto incremental por lo que no deberá completarlo
     # name --> El nombre del tutor (puede ser solo nombre sin apellido)
-    Session = sessionmaker(bind=engine)
-    in_data = Session()
 
-    tutor1 = Tutor(name= 'Max')
-    in_data.add(tutor1)
-    tutor2 = Tutor(name= 'Lewis')
-    in_data.add(tutor2)
-    tutor3 = Tutor(name= 'Valteri')
-    in_data.add(tutor3)
-    tutor4 = Tutor(name= 'Lando')
-    in_data.add(tutor4)
-    tutor5 = Tutor(name= 'Checo')
-    in_data.add(tutor5)
-    tutor6 = Tutor(name= 'Carlos')
-    in_data.add(tutor6)
+    # Obtener la path de ejecución actual del csv
+    csv_path = os.path.dirname(os.path.abspath(__file__))
+    t_file = os.path.join(csv_path, "tutores.csv")
+    with open(t_file) as fi:
+        data = list(csv.DictReader(fi))
 
-    in_data.commit()
+        for row in data:
+            insert_tutor(row['tutor'])
 
     # Llenar la tabla de la secundaria con al menos 5 estudiantes
     # Cada estudiante tiene los posibles campos:
@@ -91,47 +115,14 @@ def fill():
     # grade --> en que año de la secundaria se encuentra (1-6)
     # tutor --> el tutor de ese estudiante (el objeto creado antes)
 
-    Session = sessionmaker(bind=engine)
-    in_data = Session()
+    # Obtener la path de ejecución actual del csv
+    csv_path = os.path.dirname(os.path.abspath(__file__))
+    e_file = os.path.join(csv_path, 'estudiantes.csv')
+    with open(e_file) as fi:
+        data = list(csv.DictReader(fi))
 
-    est1 = Estudiante(name='SALMAN, Facundo', age=5, grade=1, tutor_id =5,)
-    in_data.add(est1)
-    est2 = Estudiante(name='ASTUDILLO, Luciano',age=7, grade=1, tutor_id =5)
-    in_data.add(est2)
-    est3 = Estudiante(name='CASTRO, Emmanuel', age=6, grade=1, tutor_id =5)
-    in_data.add(est3)
-    est4 = Estudiante(name='AYBAR, Ana', age=8, grade=2, tutor_id =1,)
-    in_data.add(est4)
-    est5 = Estudiante(name='ALBORNOZ, Julieta', age=8, grade=2, tutor_id =1)
-    in_data.add(est5)
-    est6 = Estudiante(name='BRUNO, Laura', age=9, grade=2, tutor_id =1)
-    in_data.add(est6)
-    est7 = Estudiante(name='CABRAL, Jazmin', age=10, grade=3, tutor_id =2,)
-    in_data.add(est7)
-    est8 = Estudiante(name='FERLAUTO, Petra', age=11, grade=3, tutor_id =2)
-    in_data.add(est8)
-    est9 = Estudiante(name='FLORES, Marcela', age=12, grade=3, tutor_id =2)
-    in_data.add(est9)
-    est10 = Estudiante(name='FRESCO, Adriana', age=13, grade=4, tutor_id =6)
-    in_data.add(est10)
-    est11 = Estudiante(name='MERCADO, Yamila', age=13, grade=4, tutor_id =6)
-    in_data.add(est11)
-    est12 = Estudiante(name='GONZALEZ, Miguel', age=12, grade=4, tutor_id =6)
-    in_data.add(est12)
-    est13 = Estudiante(name='GONZALEZ, Nadia', age=14, grade=5, tutor_id =4,)
-    in_data.add(est13)
-    est14 = Estudiante(name='CARDENAS, Gaston', age=14, grade=5, tutor_id =4)
-    in_data.add(est14)
-    est15 = Estudiante(name='HERRERA, Jose', age=15, grade=5, tutor_id =4)
-    in_data.add(est15)
-    est16 = Estudiante(name='PUITA, Jonatha', age=14, grade=6, tutor_id =3,)
-    in_data.add(est16)
-    est17 = Estudiante(name='LORENZI, Fausto', age=14, grade=6, tutor_id =3)
-    in_data.add(est17)
-    est18 = Estudiante(name='ALTAMIRANO, Sofia', age=15, grade=6, tutor_id =3)
-    in_data.add(est18)
-
-    in_data.commit()
+        for row in data:
+            insert_est(row['name'], int(row['age']), int(row['grade']), int(row['tutor_id']),)
 
     # No olvidarse que antes de poder crear un estudiante debe haberse
     # primero creado el tutor.
@@ -225,14 +216,14 @@ if __name__ == '__main__':
     fill()
     fetch()
 
-    tutor = 'Lando'
+    tutor = 'Lando-N'
     search_by_tutor(tutor)
 
-    nuevo_tutor = 'Valteri'
+    nuevo_tutor = 'Valteri-B'
     id = 2
     modify(id, nuevo_tutor)
 
-    tutor = 'Valteri'
+    tutor = 'Valteri-B'
     search_by_tutor(tutor)
 
     grade = 2
