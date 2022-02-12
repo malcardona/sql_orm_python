@@ -223,8 +223,5 @@ if __name__ == '__main__':
     id = 2
     modify(id, nuevo_tutor)
 
-    tutor = 'Valteri-B'
-    search_by_tutor(tutor)
-
     grade = 2
     count_grade(grade)
